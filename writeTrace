@@ -1,0 +1,72 @@
+//
+//  writeTrace.cpp
+//  
+//
+//  Created by yuh.huang on 12/1/15.
+//
+//
+
+#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <iomanip>
+using namespace std;
+
+int main(int argc, char** argv) {
+    if (argc < 3) {
+        cout << "Please enter input and ouput file names!" << endl;
+        return 1;
+    }
+    
+    ifstream infile;
+    ofstream outfile;
+    
+    outfile.open(argv[2]);
+    
+    infile.open(argv[1]);
+    if (infile.fail()) {
+        cout<<"error!"<<endl;
+        return 1;
+    }
+    
+    string traceline;
+    int i = 0;
+    while (getline(infile,traceline)) {
+        i++;
+        istringstream iss(traceline);
+        char column1;
+        string ins_addr;
+        string column3;
+        string column4;
+        string column5;
+        char column6;
+        char branch_indicator;
+        iss >> column1 >> ins_addr >> column3 >> column4 >> column5 >> column6 >> branch_indicator;
+        
+        
+       //outfile << ins_addr << ' ' << branch_indicator << endl;
+        switch (branch_indicator) {
+            case 'T':
+                outfile << ins_addr << ' ' << branch_indicator << endl;
+                break;
+            case 'N':
+                outfile << ins_addr << ' ' << branch_indicator << endl;
+                break;
+            case '-':
+                break;
+            default:
+                break;
+        }
+        
+        
+    }
+    outfile.close();
+    cout << "The number of branches is: " << i << endl;
+    return 0;
+}
