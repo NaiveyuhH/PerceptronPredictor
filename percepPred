@@ -1,0 +1,176 @@
+
+#include <cstdio>
+#include <cstdlib>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <iomanip>
+#include <cmath>
+
+#define TAKEN            true
+#define NOT_TAKEN        false
+#define HISTORY_LENGTH   62
+#define NUM_PERCEPTRONS  940
+#define NUM_WEIGHTS      62
+#define PRIME_NUM        149
+
+using namespace std;
+
+
+int getPerceptronIndex( long branch_address );
+int getY();
+bool get_prediction( long branch_addr );
+void update_predictor( float y, bool taken, int THETA );
+bool read_branch_result( string branch_address );
+//===================================================
+
+
+int Perceptrons[ NUM_PERCEPTRONS ][ NUM_WEIGHTS ] = {0};
+int BranchHistory[ HISTORY_LENGTH ] = {1};
+
+
+int Index = 0;
+float y = 0;
+int THETA = 1.93 * HISTORY_LENGTH + 14;
+//===================================================
+
+
+
+int main(int argc, char* argv[])
+{
+    
+    
+    if (2 > argc) {
+        cout << "Please enter file name!" << endl;
+        //return 1;
+        exit(EXIT_FAILURE);
+    }
+    
+    ifstream ifile;//read in the file
+    ifile.open(argv[1]);
+    if (!ifile.is_open()) {
+        cout<<"file open error!"<<endl;
+    }
+    
+    string br_address;
+    int num_hit = 0;
+    int num_miss = 0;
+    
+    while (getline(ifile,br_address)) {
+        /* read the branch addresses and result of branches*/
+        
+        long branch_addr=strtol(br_address.c_str(),NULL,16);
+        
+        //get the actual branch outcome
+        bool actual_taken = read_branch_result(br_address);
+        
+        //get the predicted branch outcome
+        bool predicted_taken = get_prediction( branch_addr );
+        
+        //compare the predicted and actual branch outcome, and count the number of hits and misses
+        if (actual_taken == predicted_taken)
+            num_hit++;
+        else
+            num_miss++;
+        
+        //update the perceptron weights
+        update_predictor( y, actual_taken, THETA );
+        
+        
+    }
+    
+    ifile.close();
+    double miss_rate = 100.00 * num_miss / (num_miss + num_hit);
+    cout << "The miss rate: " << miss_rate << "%" <<endl;
+}
+
+
+bool get_prediction( long branch_addr )
+{
+    
+    Index = getPerceptronIndex(branch_addr);
+    
+    y = getY();
+    
+    if( y >= 0 )
+        return TAKEN;
+    else
+        return NOT_TAKEN;
+}
+
+
+
+void update_predictor( float y, bool taken, int THETA )
+{
+    bool y_sign;
+    int t;
+    
+    y_sign = (y >= 0) ? true : false;
+    
+    if( taken )
+        t = 1;
+    else
+        t = -1;
+    
+    if( ( y_sign != taken ) ||  ( abs( y ) <= THETA ) )
+    {
+        for( int i = 0; i < NUM_WEIGHTS; ++i )
+            Perceptrons[ Index ][ i ] = Perceptrons[ Index ][ i ] + ( t * BranchHistory[ i ] );
+    }
+    
+    for( int i = 0; i < HISTORY_LENGTH - 1; ++i )
+        BranchHistory[ i ] = BranchHistory[ i + 1 ];
+    
+    BranchHistory[ HISTORY_LENGTH - 1 ] = t;
+    
+}
+
+int getPerceptronIndex(long branch_address)
+{
+    unsigned long int mask = 0x3FF;
+    unsigned long int PC_31to10 = branch_address >> 10;
+    unsigned long int PC_9to2 = (( branch_address >> 2 ) & mask );
+    
+    return (( PRIME_NUM * PC_31to10 ) + PC_9to2 ) % NUM_PERCEPTRONS;
+}
+
+int getY()
+{
+    int y_guess = 0;
+    
+    for( int i = 1; i < NUM_WEIGHTS; ++i )
+        y_guess = y_guess + ( BranchHistory[ i ] * Perceptrons[ Index ][ i ] );
+    
+    y_guess = y_guess + Perceptrons[ Index ][ 0 ];
+    
+    return y_guess;
+}
+
+bool predict_verify(bool predict_branch_tkn, bool taken)
+{
+    
+    if ( predict_branch_tkn == taken ) {
+        return true;
+    } else
+        return false;
+    
+}
+
+
+bool read_branch_result( string branch_address )
+{
+    istringstream Iss(branch_address);
+    string br_addr;
+    char result;
+    bool actual_taken;
+    Iss >> br_addr >> result;
+    if ( result == 'T' )
+        actual_taken = true;
+    else
+        actual_taken = false;
+    
+    return actual_taken;
+}
