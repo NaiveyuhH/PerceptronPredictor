@@ -49,7 +49,6 @@ int main(int argc, char** argv) {
         char branch_indicator;
         iss >> column1 >> ins_addr >> column3 >> column4 >> column5 >> column6 >> branch_indicator;
         
-        
        //outfile << ins_addr << ' ' << branch_indicator << endl;
         switch (branch_indicator) {
             case 'T':
@@ -63,7 +62,6 @@ int main(int argc, char** argv) {
             default:
                 break;
         }
-        
         
     }
     outfile.close();
